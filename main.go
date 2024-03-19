@@ -21,10 +21,11 @@ func main() {
 	mux := http.NewServeMux()
 	const rootPath = "."
 
-	mux.Handle("/app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
-	mux.Handle("/reset", apiCfg.handlerReset())
-	mux.Handle("/metrics", apiCfg.handlerMetrics())
-	mux.HandleFunc("/healthz", hanlderReadiness)
+	mux.Handle("POST /api/valid_chirp", handlerValidChirp())
+	mux.Handle("GET /app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
+	mux.Handle("GET /api/reset", apiCfg.handlerReset())
+	mux.Handle("GET /admin/metrics", apiCfg.handlerMetrics())
+	mux.HandleFunc("GET /api/healthz", hanlderReadiness)
 
 	corsMux := middlewareCors(mux)
 	s := &http.Server{
