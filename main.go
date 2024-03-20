@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -13,6 +14,7 @@ func (cfg *apiConfig) middlewareMetricsIncrement(next http.Handler) http.Handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cfg.fileServerHits++
 		next.ServeHTTP(w, r)
+		fmt.Println("hi")
 	})
 }
 
@@ -21,11 +23,14 @@ func main() {
 	mux := http.NewServeMux()
 	const rootPath = "."
 
-	mux.Handle("POST /api/valid_chirp", handlerValidChirp())
+	mux.HandleFunc("GET /api/healthz", hanlderReadiness)
+
+	mux.Handle("POST /api/chirps", handlerPostChirps())
+	mux.Handle("GET /api/chirps", handlerGetChirps())
+
 	mux.Handle("GET /app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
 	mux.Handle("GET /api/reset", apiCfg.handlerReset())
 	mux.Handle("GET /admin/metrics", apiCfg.handlerMetrics())
-	mux.HandleFunc("GET /api/healthz", hanlderReadiness)
 
 	corsMux := middlewareCors(mux)
 	s := &http.Server{
