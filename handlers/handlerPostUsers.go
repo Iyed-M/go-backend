@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ type postUserResp struct {
 	ID    int    `json:"id"`
 }
 
-func (cfg *apiConfig) handlerPostUsers() http.Handler {
+func (cfg *ApiConfig) HandlerPostUsers() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read Request Body
 		resp, err := io.ReadAll(r.Body)
@@ -45,7 +45,7 @@ func (cfg *apiConfig) handlerPostUsers() http.Handler {
 		}
 		// User data stoted in db
 		// the password is returned and hashed
-		usr_, err := cfg.db.CreateUser(parsedReq.Email, string(hashedPassord))
+		usr_, err := cfg.Db.CreateUser(parsedReq.Email, string(hashedPassord))
 
 		// POST RESPONSE
 		usrResp := postUserResp{

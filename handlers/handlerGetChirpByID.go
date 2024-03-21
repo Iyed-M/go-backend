@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"net/http"
@@ -7,7 +7,7 @@ import (
 	"github.com/Iyed-M/go-backend/utils"
 )
 
-func (cfg *apiConfig) handlerGetChirpByID() http.Handler {
+func (cfg *ApiConfig) HandlerGetChirpByID() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// get id from path
 		id, err := strconv.Atoi(r.PathValue("id"))
@@ -15,7 +15,7 @@ func (cfg *apiConfig) handlerGetChirpByID() http.Handler {
 			utils.RespondWithError(w, 500, "something went wrong")
 		}
 
-		chirps, err := cfg.db.GetChirps()
+		chirps, err := cfg.Db.GetChirps()
 		if err != nil {
 			utils.RespondWithError(w, 500, err.Error())
 		}

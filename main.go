@@ -7,47 +7,41 @@ import (
 	"os"
 
 	"github.com/Iyed-M/go-backend/database"
+	"github.com/Iyed-M/go-backend/handlers"
 )
-
-type apiConfig struct {
-	db             *database.DB
-	fileServerHits int
-}
-
-func (cfg *apiConfig) middlewareMetricsIncrement(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileServerHits++
-		next.ServeHTTP(w, r)
-	})
-}
 
 var DataBasePath = "database.json"
 
 func main() {
-	apiCfg := &apiConfig{
-		db: database.NewDB(DataBasePath),
+	apiCfg := &handlers.ApiConfig{
+		Db: database.NewDB(DataBasePath),
 	}
 	mux := http.NewServeMux()
 	const rootPath = "."
 
 	dbg := flag.Bool("debug", false, "enable debug mode")
 	flag.Parse()
+
 	if *dbg {
 		deleteDBafterTest(DataBasePath)
 	}
+
 	mux.HandleFunc("GET /api/healthz", hanlderReadiness)
 
-	mux.Handle("POST /api/users", apiCfg.handlerPostUsers())
+	mux.Handle("POST /api/login", apiCfg.HandlerPostLogin())
 
-	mux.Handle("POST /api/chirps", apiCfg.handlerPostChirps())
-	mux.Handle("GET /api/chirps", apiCfg.handlerGetChirps())
-	mux.Handle("GET /api/chirps/{id}", apiCfg.handlerGetChirpByID())
+	mux.Handle("POST /api/users", apiCfg.HandlerPostUsers())
 
-	mux.Handle("GET /app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
-	mux.Handle("GET /api/reset", apiCfg.handlerReset())
-	mux.Handle("GET /admin/metrics", apiCfg.handlerMetrics())
+	mux.Handle("POST /api/chirps", apiCfg.HandlerPostChirps())
+	mux.Handle("GET /api/chirps", apiCfg.HandlerGetChirps())
+	mux.Handle("GET /api/chirps/{id}", apiCfg.HandlerGetChirpByID())
+
+	// mux.Handle("GET /app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
+	// mux.Handle("GET /api/reset", apiCfg.handlerReset())
+	// mux.Handle("GET /admin/metrics", apiCfg.handlerMetrics())
 
 	corsMux := middlewareCors(mux)
+
 	s := &http.Server{
 		Handler: corsMux,
 		Addr:    "localhost:8080",

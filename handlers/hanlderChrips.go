@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/Iyed-M/go-backend/utils"
 )
 
-func (cfg *apiConfig) handlerPostChirps() http.Handler {
+func (cfg *ApiConfig) HandlerPostChirps() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// vaidate shirp
 		reqBody, err := io.ReadAll(r.Body)
@@ -31,7 +31,7 @@ func (cfg *apiConfig) handlerPostChirps() http.Handler {
 		}
 
 		// save chrip in db
-		chirp, err := cfg.db.CreateChirp(chirpSent.Body)
+		chirp, err := cfg.Db.CreateChirp(chirpSent.Body)
 		if err != nil {
 			utils.RespondWithError(w, 500, "error creating chirp")
 		}
@@ -43,9 +43,9 @@ func (cfg *apiConfig) handlerPostChirps() http.Handler {
 	})
 }
 
-func (cfg *apiConfig) handlerGetChirps() http.Handler {
+func (cfg *ApiConfig) HandlerGetChirps() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		chirps, err := cfg.db.GetChirps()
+		chirps, err := cfg.Db.GetChirps()
 		if err != nil {
 			utils.RespondWithError(w, 500, err.Error())
 		}
