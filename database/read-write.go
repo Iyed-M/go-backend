@@ -7,10 +7,17 @@ import (
 	"os"
 )
 
+func newDBStructure() *DBStructure {
+	return &DBStructure{
+		Chrips: make(map[string]Chirp),
+		Users:  make(map[string]User),
+	}
+}
+
 // newId generares new ID by incrementing it each time it s called
 func (db *DB) newId() int {
-	db.id++
-	return db.id
+	db.chirpID++
+	return db.chirpID
 }
 
 // loadDB reads the databasefile into memory
@@ -23,14 +30,10 @@ func (db *DB) loadDB() (*DBStructure, error) {
 		return &DBStructure{}, err
 	}
 	if len(dataJSON) == 0 {
-		return &DBStructure{
-			Chrips: make(map[string]Chirp),
-		}, errors.New("empty file")
+		return newDBStructure(), errors.New("empty file")
 	}
 
-	buffer := &DBStructure{
-		Chrips: make(map[string]Chirp),
-	}
+	buffer := newDBStructure()
 
 	err = json.Unmarshal(dataJSON, &buffer)
 	if err != nil {
