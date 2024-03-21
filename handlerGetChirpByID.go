@@ -7,7 +7,7 @@ import (
 	"github.com/Iyed-M/go-backend/utils"
 )
 
-func (cfg apiConfig) handlerGetChirpByID() http.Handler {
+func (cfg *apiConfig) handlerGetChirpByID() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// get id from path
 		id, err := strconv.Atoi(r.PathValue("id"))

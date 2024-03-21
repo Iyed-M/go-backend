@@ -31,7 +31,10 @@ func (cfg *apiConfig) handlerPostChirps() http.Handler {
 		}
 
 		// save chrip in db
-		chirp := cfg.db.CreateChirp(chirpSent.Body)
+		chirp, err := cfg.db.CreateChirp(chirpSent.Body)
+		if err != nil {
+			utils.RespondWithError(w, 500, "error creating chirp")
+		}
 
 		err = utils.RespondWithJSON(w, 201, chirp)
 		if err != nil {
