@@ -30,6 +30,7 @@ func main() {
 
 	mux.Handle("POST /api/chirps", apiCfg.handlerPostChirps())
 	mux.Handle("GET /api/chirps", apiCfg.handlerGetChirps())
+	mux.Handle("GET /api/chirps/{id}", apiCfg.handlerGetChirpByID())
 
 	mux.Handle("GET /app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
 	mux.Handle("GET /api/reset", apiCfg.handlerReset())

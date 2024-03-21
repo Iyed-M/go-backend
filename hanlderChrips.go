@@ -9,14 +9,6 @@ import (
 	"github.com/Iyed-M/go-backend/utils"
 )
 
-func incrementID() func() int {
-	id := 1
-	return func() int {
-		id++
-		return id
-	}
-}
-
 func (cfg *apiConfig) handlerPostChirps() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// vaidate shirp
@@ -41,7 +33,7 @@ func (cfg *apiConfig) handlerPostChirps() http.Handler {
 		// save chrip in db
 		chirp := cfg.db.CreateChirp(chirpSent.Body)
 
-		err = utils.RespondWithJSON(w, 200, chirp)
+		err = utils.RespondWithJSON(w, 201, chirp)
 		if err != nil {
 			utils.RespondWithError(w, 500, err.Error())
 		}
