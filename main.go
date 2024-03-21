@@ -1,15 +1,17 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Iyed-M/go-backend/database"
 )
 
 type apiConfig struct {
-	fileServerHits int
 	db             *database.DB
+	fileServerHits int
 }
 
 func (cfg *apiConfig) middlewareMetricsIncrement(next http.Handler) http.Handler {
@@ -19,14 +21,23 @@ func (cfg *apiConfig) middlewareMetricsIncrement(next http.Handler) http.Handler
 	})
 }
 
+var DataBasePath = "database.json"
+
 func main() {
 	apiCfg := &apiConfig{
-		db: database.NewDB("database.json"),
+		db: database.NewDB(DataBasePath),
 	}
 	mux := http.NewServeMux()
 	const rootPath = "."
 
+	dbg := flag.Bool("debug", false, "enable debug mode")
+	flag.Parse()
+	if *dbg {
+		deleteDBafterTest(DataBasePath)
+	}
 	mux.HandleFunc("GET /api/healthz", hanlderReadiness)
+
+	mux.Handle("POST /api/users", apiCfg.handlerPostUsers())
 
 	mux.Handle("POST /api/chirps", apiCfg.handlerPostChirps())
 	mux.Handle("GET /api/chirps", apiCfg.handlerGetChirps())
@@ -57,4 +68,8 @@ func middlewareCors(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func deleteDBafterTest(path string) {
+	os.Remove(path)
 }
