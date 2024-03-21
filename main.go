@@ -1,32 +1,35 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/Iyed-M/go-backend/database"
 )
 
 type apiConfig struct {
 	fileServerHits int
+	db             *database.DB
 }
 
 func (cfg *apiConfig) middlewareMetricsIncrement(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cfg.fileServerHits++
 		next.ServeHTTP(w, r)
-		fmt.Println("hi")
 	})
 }
 
 func main() {
-	apiCfg := &apiConfig{}
+	apiCfg := &apiConfig{
+		db: database.NewDB("database.json"),
+	}
 	mux := http.NewServeMux()
 	const rootPath = "."
 
 	mux.HandleFunc("GET /api/healthz", hanlderReadiness)
 
-	mux.Handle("POST /api/chirps", handlerPostChirps())
-	mux.Handle("GET /api/chirps", handlerGetChirps())
+	mux.Handle("POST /api/chirps", apiCfg.handlerPostChirps())
+	mux.Handle("GET /api/chirps", apiCfg.handlerGetChirps())
 
 	mux.Handle("GET /app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
 	mux.Handle("GET /api/reset", apiCfg.handlerReset())

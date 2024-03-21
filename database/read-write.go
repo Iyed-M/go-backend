@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -13,21 +14,27 @@ func (db *DB) newId() int {
 }
 
 // loadDB reads the databasefile into memory
-func (db *DB) loadDB() (DBStructure, error) {
+func (db *DB) loadDB() (*DBStructure, error) {
 	if err := db.ensureDB(); err != nil {
-		return DBStructure{}, err
+		return &DBStructure{}, err
 	}
-
 	dataJSON, err := os.ReadFile(db.path)
 	if err != nil {
-		return DBStructure{}, err
+		return &DBStructure{}, err
+	}
+	if len(dataJSON) == 0 {
+		return &DBStructure{
+			Chrips: make(map[string]Chirp),
+		}, errors.New("empty file")
 	}
 
-	buffer := DBStructure{}
+	buffer := &DBStructure{
+		Chrips: make(map[string]Chirp),
+	}
 
 	err = json.Unmarshal(dataJSON, &buffer)
 	if err != nil {
-		return DBStructure{}, err
+		return &DBStructure{}, err
 	}
 
 	return buffer, nil

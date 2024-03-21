@@ -19,12 +19,12 @@ type Chirp struct {
 type Chirps []Chirp
 
 type DBStructure struct {
-	Chrips map[string]Chirp
+	Chrips map[string]Chirp `json:"chirps"`
 }
 
 func NewDB(path string) *DB {
 	db := &DB{
-		id:   1,
+		id:   0,
 		path: path,
 	}
 
@@ -33,26 +33,38 @@ func NewDB(path string) *DB {
 	return db
 }
 
-// CreateChirp creates a new chirp and adds it to the database
-func (db *DB) CreateChirp(chirp Chirp) error {
-	// Stores all chirps in the memory
+func (db *DB) getLastID() int {
 	db.mu.Lock()
 	defer db.mu.Unlock()
-	dbStruct, err := db.loadDB()
-	if err != nil {
-		return err
+
+	db.id++
+	return db.id
+}
+
+// CreateChirp creates a new chirp from body and return it
+func (db *DB) CreateChirp(body string) Chirp {
+	chirp := Chirp{
+		ID:   db.getLastID(),
+		Body: body,
 	}
 
-	// add new chirp in memory
-	newID := db.newId()
-	dbStruct.Chrips[strconv.Itoa(newID)] = chirp
-	// write chrips in disk
-	err = db.writeDB(dbStruct)
-	if err != nil {
-		return err
+	// load db in memory
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	dbstruct, err := db.loadDB()
+	if err != nil && err.Error() != "empty file" {
+		return Chirp{}
 	}
 
-	return nil
+	dbstruct.Chrips[strconv.Itoa(chirp.ID)] = chirp
+
+	err = db.writeDB(*dbstruct)
+	if err != nil {
+		return Chirp{}
+	}
+
+	return chirp
 }
 
 func (db *DB) GetChirps() ([]Chirp, error) {
@@ -60,11 +72,12 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 	defer db.mu.Unlock()
 
 	dbStruct, err := db.loadDB()
-	if err != nil {
+	if err != nil && err.Error() != "empty file" {
 		return nil, err
 	}
 	chirps := []Chirp{}
-	for _, chirp := range dbStruct.Chrips {
+
+	for _, chirp := range (*dbStruct).Chrips {
 		chirps = append(chirps, chirp)
 	}
 
