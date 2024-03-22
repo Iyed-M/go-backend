@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+var ErrEmptyFile = errors.New("empty file")
+
 func newDBStructure() *DBStructure {
 	return &DBStructure{
 		Chrips: make(map[string]Chirp),
@@ -20,7 +22,8 @@ func (db *DB) newId() int {
 	return db.chirpID
 }
 
-// loadDB reads the databasefile into memory
+// loadDB loads the databasefile into memory returns a pointer to it
+// throw erro empty file if the file is empty
 func (db *DB) loadDB() (*DBStructure, error) {
 	if err := db.ensureDB(); err != nil {
 		return &DBStructure{}, err
@@ -30,7 +33,7 @@ func (db *DB) loadDB() (*DBStructure, error) {
 		return &DBStructure{}, err
 	}
 	if len(dataJSON) == 0 {
-		return newDBStructure(), errors.New("empty file")
+		return newDBStructure(), ErrEmptyFile
 	}
 
 	buffer := newDBStructure()

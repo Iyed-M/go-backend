@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/Iyed-M/go-backend/database"
 	"github.com/Iyed-M/go-backend/utils"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -47,17 +48,16 @@ func (cfg *ApiConfig) HandlerPostUsers() http.Handler {
 		// the password is returned and hashed
 		usr_, err := cfg.Db.CreateUser(parsedReq.Email, string(hashedPassord))
 
+		if err != nil && err != database.ErrEmptyFile {
+			utils.RespondWithError(w, http.StatusInternalServerError, "error creating user")
+			return
+		}
+
 		// POST RESPONSE
 		usrResp := postUserResp{
 			Email: usr_.Email,
 			ID:    usr_.ID,
 		}
-
-		if err != nil && err.Error() != "empty file" {
-			utils.RespondWithError(w, http.StatusInternalServerError, "error creating user")
-			return
-		}
-
 		utils.RespondWithJSON(w, 201, usrResp)
 	})
 }
