@@ -67,12 +67,20 @@ func (cfg *ApiConfig) HandlerPutUsers() http.Handler {
 			return
 		}
 		log.Printf("new User :%+v\n", *paresedRequestBody)
-		cfg.Db.UpdateUser(
-			database.User{
-				ID:       id,
-				Email:    paresedRequestBody.Email,
-				Password: string(hashedNewPass),
-			},
+
+		// update the user data in the database
+		newUserData := database.User{
+			ID:       id,
+			Email:    paresedRequestBody.Email,
+			Password: string(hashedNewPass),
+		}
+		cfg.Db.UpdateUser(newUserData)
+
+		// Respond with the new user data
+		utils.RespondWithJSON(
+			w,
+			200,
+			map[string]any{"email": newUserData.Email, "id": newUserData.ID},
 		)
 	})
 }
