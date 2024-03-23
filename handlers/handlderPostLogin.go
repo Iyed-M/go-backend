@@ -2,14 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/Iyed-M/go-backend/utils"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type loginReq struct {
@@ -44,37 +41,14 @@ func (cfg *ApiConfig) HandlerPostLogin() http.Handler {
 			return
 		}
 
-		accessToken := jwt.NewWithClaims(
-			jwt.SigningMethodHS256,
-			jwt.RegisteredClaims{
-				Issuer:   "chirpy-access",
-				IssuedAt: jwt.NewNumericDate(time.Now().UTC()),
-				ExpiresAt: jwt.NewNumericDate(
-					time.Now().UTC().Add(time.Hour * time.Duration(cfg.AccessTokenLifeHours)),
-				),
-				Subject: fmt.Sprintf("%d", id),
-			},
-		)
-		signedAccessToken, err := accessToken.SignedString([]byte(cfg.JWTSecret))
+		signedAccessToken, err := newSignedToken("chirpy-access", cfg.AccessTokenLifeHours, id, cfg.JWTSecret)
 		if err != nil {
 			log.Print("accessToken", err)
 			utils.RespondWithError(w, 500, "error signing token")
 			return
 		}
 
-		refreshToken := jwt.NewWithClaims(
-			jwt.SigningMethodHS256,
-			jwt.RegisteredClaims{
-				Issuer:   "chirpy-refresh",
-				IssuedAt: jwt.NewNumericDate(time.Now().UTC()),
-				ExpiresAt: jwt.NewNumericDate(
-					time.Now().UTC().Add(time.Duration(cfg.RefreshTokenLifeDays) * time.Hour * 24),
-				),
-				Subject: fmt.Sprintf("%d", id),
-			},
-		)
-
-		signedRefreshToken, err := refreshToken.SignedString([]byte(cfg.JWTSecret))
+		signedRefreshToken, err := newSignedToken("chirpy-refresh", cfg.RefreshTokenLifeDays*24, id, cfg.JWTSecret)
 		if err != nil {
 			log.Print("refreshToken", err)
 			utils.RespondWithError(w, 500, "error signing token")

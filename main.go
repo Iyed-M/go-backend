@@ -38,6 +38,8 @@ func main() {
 
 	mux.Handle("PUT /api/users", apiCfg.HandlerPutUsers())
 	mux.Handle("POST /api/users", apiCfg.HandlerPostUsers())
+	mux.Handle("POST /api/refresh", apiCfg.HandlerPostRefresh())
+	mux.Handle("POST /api/revoke", apiCfg.HandlerPostRevoke())
 
 	mux.Handle("POST /api/chirps", apiCfg.HandlerPostChirps())
 	mux.Handle("GET /api/chirps", apiCfg.HandlerGetChirps())
