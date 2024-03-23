@@ -11,8 +11,9 @@ var ErrEmptyFile = errors.New("empty file")
 
 func newDBStructure() *DBStructure {
 	return &DBStructure{
-		Chrips: make(map[string]Chirp),
-		Users:  make(map[string]User),
+		Chrips:        make(map[string]Chirp),
+		Users:         make(map[string]User),
+		RevokedTokens: make(map[string][]string),
 	}
 }
 
