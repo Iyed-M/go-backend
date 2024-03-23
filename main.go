@@ -17,8 +17,10 @@ func main() {
 	godotenv.Load()
 
 	apiCfg := &handlers.ApiConfig{
-		Db:        database.NewDB(DataBasePath),
-		JWTSecret: os.Getenv("JWT_SECRET"),
+		Db:                   database.NewDB(DataBasePath),
+		JWTSecret:            os.Getenv("JWT_SECRET"),
+		RefreshTokenLifeDays: 60,
+		AccessTokenLifeHours: 1,
 	}
 	mux := http.NewServeMux()
 	const rootPath = "."

@@ -5,7 +5,9 @@ import (
 )
 
 type ApiConfig struct {
-	Db             *database.DB
-	FileServerHits int
-	JWTSecret      string
+	Db                   *database.DB
+	FileServerHits       int
+	JWTSecret            string
+	RefreshTokenLifeDays int
+	AccessTokenLifeHours int
 }

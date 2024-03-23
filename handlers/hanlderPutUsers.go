@@ -36,6 +36,18 @@ func (cfg *ApiConfig) HandlerPutUsers() http.Handler {
 			log.Println(err)
 			return
 		}
+
+		issuer, err := parsedToken.Claims.GetIssuer()
+		if err != nil {
+			utils.RespondWithError(w, 401, "invalid token")
+			log.Println(err)
+			return
+		}
+		if issuer != "chirpy-access" {
+			utils.RespondWithJSON(w, 401, "invalid token")
+			log.Println("token not from chirpy-access")
+			return
+		}
 		strID, err := parsedToken.Claims.GetSubject()
 		if err != nil {
 			utils.RespondWithError(w, 401, "invalid token")
@@ -49,6 +61,7 @@ func (cfg *ApiConfig) HandlerPutUsers() http.Handler {
 			log.Println(err)
 			return
 		}
+
 		paresedRequestBody := &putUserReq{}
 		err = json.NewDecoder(r.Body).Decode(paresedRequestBody)
 		if err != nil {
@@ -66,7 +79,6 @@ func (cfg *ApiConfig) HandlerPutUsers() http.Handler {
 			log.Println(err)
 			return
 		}
-		log.Printf("new User :%+v\n", *paresedRequestBody)
 
 		// update the user data in the database
 		newUserData := database.User{

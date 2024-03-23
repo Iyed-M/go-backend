@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/Iyed-M/go-backend/utils"
@@ -14,12 +13,12 @@ import (
 )
 
 type loginReq struct {
-	Password         string `json:"password"`
-	Email            string `json:"email"`
-	ExpiresInSeconds int    `json:"expires_in_seconds"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 type loginResp struct {
-	Token string `json:"token"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (cfg *ApiConfig) HandlerPostLogin() http.Handler {
@@ -37,30 +36,50 @@ func (cfg *ApiConfig) HandlerPostLogin() http.Handler {
 			utils.RespondWithError(w, 500, "something wernt wrong parsing your request")
 			return
 		}
+
 		id, err := cfg.Db.GetUserIDByEmail(loginRequest.Email, loginRequest.Password)
 		if err != nil {
 			log.Println(err)
 			utils.RespondWithError(w, 401, "invalid email or password")
 			return
 		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-			Issuer:   "chirpy",
-			IssuedAt: jwt.NewNumericDate(time.Now().UTC()),
-			ExpiresAt: jwt.NewNumericDate(
-				time.Now().UTC().Add(time.Second * time.Duration(loginRequest.ExpiresInSeconds)),
-			),
-			Subject: fmt.Sprintf("%d", id),
-		})
 
-		signedToken, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-		if err != nil {
-			log.Print(err)
-			utils.RespondWithError(w, 500, "error signing token")
-		}
-		utils.RespondWithJSON(
-			w,
-			200,
-			loginResp{Token: signedToken},
+		accessToken := jwt.NewWithClaims(
+			jwt.SigningMethodHS256,
+			jwt.RegisteredClaims{
+				Issuer:   "chirpy-access",
+				IssuedAt: jwt.NewNumericDate(time.Now().UTC()),
+				ExpiresAt: jwt.NewNumericDate(
+					time.Now().UTC().Add(time.Hour * time.Duration(cfg.AccessTokenLifeHours)),
+				),
+				Subject: fmt.Sprintf("%d", id),
+			},
 		)
+		signedAccessToken, err := accessToken.SignedString([]byte(cfg.JWTSecret))
+		if err != nil {
+			log.Print("accessToken", err)
+			utils.RespondWithError(w, 500, "error signing token")
+			return
+		}
+
+		refreshToken := jwt.NewWithClaims(
+			jwt.SigningMethodHS256,
+			jwt.RegisteredClaims{
+				Issuer:   "chirpy-refresh",
+				IssuedAt: jwt.NewNumericDate(time.Now().UTC()),
+				ExpiresAt: jwt.NewNumericDate(
+					time.Now().UTC().Add(time.Duration(cfg.RefreshTokenLifeDays) * time.Hour * 24),
+				),
+				Subject: fmt.Sprintf("%d", id),
+			},
+		)
+
+		signedRefreshToken, err := refreshToken.SignedString([]byte(cfg.JWTSecret))
+		if err != nil {
+			log.Print("refreshToken", err)
+			utils.RespondWithError(w, 500, "error signing token")
+			return
+		}
+		utils.RespondWithJSON(w, 200, loginResp{Token: signedAccessToken, RefreshToken: signedRefreshToken})
 	})
 }
