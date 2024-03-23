@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
@@ -79,5 +80,21 @@ func validateUserPassword(password string, hashedPassword string) (err error) {
 	if err != nil {
 		return ErrIncorrectPassword
 	}
+	return nil
+}
+
+func (db *DB) UpdateUser(newUser User) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	loadedDB, err := db.loadDB()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("new password:", loadedDB.Users[strconv.Itoa(newUser.ID)].Password)
+	fmt.Println("new password:", newUser.Password)
+	loadedDB.Users[strconv.Itoa(newUser.ID)] = newUser
+	db.writeDB(*loadedDB)
 	return nil
 }

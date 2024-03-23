@@ -1,4 +1,5 @@
-out
-database.json
+./out
+./database.json
+./.env
 
-curlTest/*
+./curlTest/*

@@ -7,4 +7,5 @@ import (
 type ApiConfig struct {
 	Db             *database.DB
 	FileServerHits int
+	JWTSecret      string
 }

@@ -8,13 +8,17 @@ import (
 
 	"github.com/Iyed-M/go-backend/database"
 	"github.com/Iyed-M/go-backend/handlers"
+	"github.com/joho/godotenv"
 )
 
 var DataBasePath = "database.json"
 
 func main() {
+	godotenv.Load()
+
 	apiCfg := &handlers.ApiConfig{
-		Db: database.NewDB(DataBasePath),
+		Db:        database.NewDB(DataBasePath),
+		JWTSecret: os.Getenv("JWT_SECRET"),
 	}
 	mux := http.NewServeMux()
 	const rootPath = "."
@@ -30,15 +34,12 @@ func main() {
 
 	mux.Handle("POST /api/login", apiCfg.HandlerPostLogin())
 
+	mux.Handle("PUT /api/users", apiCfg.HandlerPutUsers())
 	mux.Handle("POST /api/users", apiCfg.HandlerPostUsers())
 
 	mux.Handle("POST /api/chirps", apiCfg.HandlerPostChirps())
 	mux.Handle("GET /api/chirps", apiCfg.HandlerGetChirps())
 	mux.Handle("GET /api/chirps/{id}", apiCfg.HandlerGetChirpByID())
-
-	// mux.Handle("GET /app/*", apiCfg.middlewareMetricsIncrement(http.StripPrefix("/app", http.FileServer(http.Dir(rootPath)))))
-	// mux.Handle("GET /api/reset", apiCfg.handlerReset())
-	// mux.Handle("GET /admin/metrics", apiCfg.handlerMetrics())
 
 	corsMux := middlewareCors(mux)
 
