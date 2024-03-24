@@ -1,5 +1,8 @@
 ./out
 ./database.json
 ./.env
+./http
+count.sh
+test_all.sh
 
 ./curlTest/*
