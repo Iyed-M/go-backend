@@ -1,17 +1,24 @@
 package database
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
+
+var ErrChirpNotFound = errors.New("chirp not found")
 
 type Chirp struct {
-	Body string `json:"body"`
-	ID   int    `json:"id"`
+	Body     string `json:"body"`
+	ID       int    `json:"id"`
+	AuthorId string `json:"author_id"`
 }
 
 // CreateChirp creates a new chirp from body and return it
-func (db *DB) CreateChirp(body string) (Chirp, error) {
+func (db *DB) CreateChirp(authId, body string) (Chirp, error) {
 	chirp := Chirp{
-		ID:   db.getLastChirpID(),
-		Body: body,
+		ID:       db.getLastChirpID(),
+		Body:     body,
+		AuthorId: authId,
 	}
 
 	// load db in memory
@@ -50,4 +57,38 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 	}
 
 	return chirps, nil
+}
+
+func (db *DB) DeleteChirp(id string) error {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	dbStruct, err := db.loadDB()
+	if err != nil {
+		return err
+	}
+	delete(dbStruct.Chrips, id)
+	db.writeDB(*dbStruct)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *DB) GetChirpByID(chirpID string) (Chirp, error) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	dbStruct, err := db.loadDB()
+	if err != nil {
+		return Chirp{}, err
+	}
+
+	for id, chirp := range dbStruct.Chrips {
+		if id == chirpID {
+			return chirp, nil
+		}
+	}
+
+	return Chirp{}, ErrChirpNotFound
 }
